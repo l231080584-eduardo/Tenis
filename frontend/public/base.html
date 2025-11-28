@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNEAKER POINT- {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}" class="logo">SNEAKER POINT</a>
+            <nav class="main-nav">
+                {% if session.get('loggedin') %}
+                <a href="{{ url_for('index') }}">Catálogo</a>
+                
+                <a href="#" id="open-size-guide">Guía de tallas</a>
+                {% endif %}
+            </nav>
+            
+            <div class="utility-bar-desktop">
+                <div class="search-container">
+                    <input type="text" placeholder="Buscar tenis, marca..." aria-label="Buscar productos">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="user-actions">
+                    <a href="{{ url_for('carrito') }}" title="Carrito">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count">{{ session.get('cart')|length if session.get('cart') else 0 }}</span>
+                    </a>
+                    {% if session.get('loggedin') %}
+                    <a href="#" title="Bienvenido, {{ session.get('nombre_cliente', 'Cliente') }}">
+                        <i class="fas fa-user-circle"></i>
+                    </a>
+                    <a href="{{ url_for('logout') }}" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" title="Iniciar Sesión"><i class="fas fa-sign-in-alt"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <span class="logo-footer">SNEAKER POINT</span>
+                <p>Catálogo de tenis — “Tu estilo, tu pisada.”</p>
+            </div>
+            <div class="footer-right">
+                
+                <a href="#" id="open-size-guide-footer">Ver guía de tallas</a>
+                <span>Contacto: hola@THE_4_FANTASTIC.com</span>
+            </div>
+        </div>
+    </footer>
+    
+    <div id="sizeGuideModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            
+            <div class="size-guide-header">
+                <h2>Guía de tallas</h2>
+                <p>A continuación, una tabla orientativa para convertir tallas mexicanas a centímetros y tallas internacionales.</p>
+            </div>
+            
+            <table class="size-table">
+                <thead>
+                    <tr>
+                        <th>Talla (MX)</th>
+                        <th>CM (largo pie)</th>
+                        <th>Talla (EU)</th>
+                        <th>Talla (US)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>20</td><td>12.6</td><td>33</td><td>2</td></tr>
+                    <tr><td>21</td><td>13.3</td><td>34</td><td>3</td></tr>
+                    <tr><td>22</td><td>14.0</td><td>35</td><td>4</td></tr>
+                    <tr><td>23</td><td>14.6</td><td>36</td><td>5</td></tr>
+                    <tr><td>24</td><td>15.3</td><td>37</td><td>6</td></tr>
+                    <tr><td>25</td><td>16.0</td><td>38</td><td>7</td></tr>
+                    <tr><td>26</td><td>16.6</td><td>39</td><td>8</td></tr>
+                    <tr><td>27</td><td>17.3</td><td>40</td><td>9</td></tr>
+                    <tr><td>28</td><td>18.0</td><td>41</td><td>10</td></tr>
+                    <tr><td>29</td><td>18.6</td><td>42</td><td>11</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- ================================================= -->
+    
+    <script>
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('sizeGuideModal');
+            const openButtons = document.querySelectorAll('#open-size-guide, #open-size-guide-footer');
+            const closeButton = modal.querySelector('.close-button');
+
+            
+            openButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault(); 
+                    modal.style.display = 'flex'; 
+                    document.body.style.overflow = 'hidden'; 
+                });
+            });
+
+            // Cerrar modal
+            closeButton.addEventListener('click', () => {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto'; 
+            });
+
+            window.addEventListener('click', (e) => {
+                if (e.target == modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
