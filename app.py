@@ -3,24 +3,36 @@ import psycopg2
 import os
 
 app = Flask(__name__)
-app.secret_key = "SNEAKERPOINT2024"   # Cambiar por seguridad
+app.secret_key = "SNEAKERPOINT2024"  # Cambiar por seguridad
 
-# --- DATABASE (Railway/Render) ---
+# ================================
+# 🔵 BASE DE DATOS (Railway / Render)
+# ================================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_conn():
-    return psycopg2.connect(DATABASE_URL)
+    try:
+        return psycopg2.connect(DATABASE_URL)
+    except Exception as e:
+        print("❌ ERROR DE CONEXIÓN A LA BASE DE DATOS:", e)
+        return None
 
 
 # ============================
-# 🌐 RUTA PRINCIPAL
+# 🌐 RUTA PRINCIPAL (HOME)
 # ============================
 @app.route("/")
 def index():
     conn = get_conn()
+    if conn is None:
+        return "❌ No se pudo conectar a la base de datos"
+
     cur = conn.cursor()
 
-    cur.execute("SELECT id_producto, nombre, marca, talla, color, precio, descripcion, stock FROM productos")
+    cur.execute("""
+        SELECT id_producto, nombre, marca, talla, color, precio, descripcion, stock 
+        FROM productos
+    """)
     datos = cur.fetchall()
 
     productos = []
@@ -57,8 +69,10 @@ def registro():
         conn = get_conn()
         cur = conn.cursor()
 
-        cur.execute("INSERT INTO usuarios(nombre, apellido, telefono, correo, password) VALUES(%s,%s,%s,%s,%s)",
-                    (nombre, apellido, telefono, correo, contraseña))
+        cur.execute("""
+            INSERT INTO usuarios(nombre, apellido, telefono, correo, password)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nombre, apellido, telefono, correo, contraseña))
 
         conn.commit()
         cur.close()
@@ -81,8 +95,13 @@ def login():
 
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute("SELECT id_usuario, nombre FROM usuarios WHERE correo=%s AND password=%s",
-                    (correo, contraseña))
+
+        cur.execute("""
+            SELECT id_usuario, nombre 
+            FROM usuarios 
+            WHERE correo=%s AND password=%s
+        """, (correo, contraseña))
+
         user = cur.fetchone()
 
         cur.close()
@@ -126,8 +145,15 @@ def add_cart():
 
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT id_producto, nombre, precio FROM productos WHERE id_producto=%s", (idp,))
+
+    cur.execute("""
+        SELECT id_producto, nombre, precio 
+        FROM productos 
+        WHERE id_producto=%s
+    """, (idp,))
+
     prod = cur.fetchone()
+
     cur.close()
     conn.close()
 
@@ -142,7 +168,7 @@ def add_cart():
             "precio": prod[2]
         },
         "cantidad": 1,
-        "subtotal": float(prod[2]) * 1
+        "subtotal": float(prod[2])
     }
 
     cart = session.get("cart", [])
@@ -175,7 +201,7 @@ def comprar():
 
 
 # ============================
-# 🔧 RUN
+# 🔧 RUN (Render)
 # ============================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 3000)))
